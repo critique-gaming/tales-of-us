@@ -13,19 +13,18 @@
 void UMainUI::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
-    check(DialogueTextBlock != nullptr);
+    GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+    check(GameState != nullptr);
+
+    EndLevel->GameState = GameState;
+    Option->GameState = GameState;
+
+    GameState->OnAdvanceEndLevelDialogue.AddDynamic(EndLevel, &UEndLevel::AddDialogueLine);
+    GameState->OnAdvanceOptionDialogue.AddDynamic(Option, &UOption::AddDialogueLine);
+
+    EndLevel->SetVisibility(ESlateVisibility::Hidden);
+	Option->SetVisibility(ESlateVisibility::Hidden);
 }
-
-void UMainUI::ShowEndLevelDialogue(FText Text)
-{
-    
-}
-
-void UMainUI::ShowOptionDialogue(FText Text)
-{
-
-}
-
 
 
 

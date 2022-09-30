@@ -21,15 +21,8 @@ public:
 
 // Properties
 public:
-    UPROPERTY(EditDefaultsOnly)
-    TSubclassOf<class UDialogueTextBlock> DialogueTextBlock;
-
     UPROPERTY(BlueprintReadOnly)
     class ARythmGameState* GameState;
-
-public:
-    void ShowEndLevelDialogue(FText Text);
-    void ShowOptionDialogue(FText Text);
 
 private:
     UFUNCTION()

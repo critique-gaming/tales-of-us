@@ -8,6 +8,6 @@ public class TalesOfUs : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "Tweener", "InputCore", "HeadMountedDisplay", "UMG"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "Tweener", "InputCore", "HeadMountedDisplay", "UMG", "Slate", "SlateCore"});
 	}
 }
