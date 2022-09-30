@@ -11,6 +11,10 @@
 		}
 	],
 	"Plugins": [
+    {
+			"Name": "Tweener",
+			"Enabled": true
+		},
 		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
