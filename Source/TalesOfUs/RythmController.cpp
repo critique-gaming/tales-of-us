@@ -51,10 +51,11 @@ void ARythmController::CancelAnimation(bool bComplete)
 
 void ARythmController::ApplyLegAnimation(FLegState& LegState)
 {
-	LegState.LastPosition = LegState.CurrentPosition;
-
 	UTweenerSubsystem* TweenerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UTweenerSubsystem>();
 	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, LegState.CurrentPosition, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
+	LegState.Tween->CompleteNonDynamic.BindWeakLambda(this, [this, &LegState]() {
+		LegState.LastPosition = LegState.CurrentPosition;
+	});
 	TweenerSubsystem->StartTween(LegState.Tween);
 
 	FVector FirstLegPosition(INFINITY, 0.0f, 0.0f);
