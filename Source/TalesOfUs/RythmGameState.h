@@ -12,6 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceEndDialogueDelegate, FText, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateEndVisuals, const struct FSlateBrush&, Brush);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceOptionDialogueDelegate, const struct FDialogueItem&, DialogueItem);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUpdateOptionVisuals, const struct FDialogueCharacter&, LeftCharacter, const struct FDialogueCharacter&, RightCharacter);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FUpdateOptionButtons, const FText&, LeftText, FName, LeftId, const FText&, RightText, FName, RightId);
 
 UCLASS(Blueprintable, BlueprintType)
 class ARythmGameState : public AGameStateBase
@@ -39,6 +40,9 @@ public:
 
 	UPROPERTY()
 	FUpdateOptionVisuals OnOptionChange;
+
+	UPROPERTY()
+	FUpdateOptionButtons OnButtonUpdate;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UMainUI> MainUIClass;

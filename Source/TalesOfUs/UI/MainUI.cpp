@@ -27,6 +27,7 @@ void UMainUI::NativeOnInitialized()
     GameState->OnOptionChange.AddDynamic(Option, &UOption::UpdateVisuals);
     GameState->OnLevelChange.AddDynamic(Option, &UOption::Hide);
     GameState->OnAdvanceOptionDialogue.AddDynamic(Option, &UOption::AddDialogueLine);
+    GameState->OnButtonUpdate.AddDynamic(Option, &UOption::UpdateButtons);
     
     EndLevel->SetVisibility(ESlateVisibility::Hidden);
 	Option->SetVisibility(ESlateVisibility::Hidden);

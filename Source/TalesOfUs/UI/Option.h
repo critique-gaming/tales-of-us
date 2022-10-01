@@ -35,6 +35,12 @@ public:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UButton* RightOptionButton;
 
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    class UTextBlock* LeftOptionText;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    class UTextBlock* RightOptionText;
+
     UPROPERTY(BlueprintReadOnly)
     class ARythmGameState* GameState;
 
@@ -45,6 +51,9 @@ public:
 public:
     UFUNCTION()
     void UpdateVisuals(const FDialogueCharacter& LeftCharacter, const FDialogueCharacter& RightCharacter);
+
+    UFUNCTION()
+    void UpdateButtons(const FText& LeftChoiceText, FName _LeftLevelId, const FText& RightChoiceText, FName _RightLevelId);
     
     UFUNCTION()
     void AddDialogueLine(const FDialogueItem& DialogueItem);
@@ -53,5 +62,22 @@ public:
     void Hide();
 
 protected:
+    void NativeOnInitialized() override;
     FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+private:
+
+    // TODO: These should be kept on a button class but i'm too lazy to do that now
+    UPROPERTY()
+    FName LeftLevelId;
+
+    UPROPERTY()
+    FName RightLevelId;
+
+private:
+    UFUNCTION()
+    void MakeLeftChoice();
+
+    UFUNCTION()
+    void MakeRightChoice();
 };

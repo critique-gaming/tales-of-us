@@ -48,7 +48,18 @@ void ARythmGameState::ShowOption()
 
 void ARythmGameState::AdvanceOptionsDialogue()
 {
-	if (OptionDialogueIndex >= SelectedLevel.Choice.DialogueLines.Num()) { return; }
+	if (OptionDialogueIndex > SelectedLevel.Choice.DialogueLines.Num()) { return; }
+
+	if (OptionDialogueIndex == SelectedLevel.Choice.DialogueLines.Num()) {
+		const FText& LeftText = SelectedLevel.Choice.FirstChoiceText;
+		FName LeftId = SelectedLevel.Choice.FirstChoiceLevel;
+		const FText& RightText = SelectedLevel.Choice.SecondChoiceText;
+		FName RightId = SelectedLevel.Choice.FirstChoiceLevel;
+
+		OnButtonUpdate.Broadcast(LeftText, LeftId, RightText, RightId);
+		OptionDialogueIndex++;
+		return;
+	}
 
 	OnAdvanceOptionDialogue.Broadcast(SelectedLevel.Choice.DialogueLines[OptionDialogueIndex]);
 	OptionDialogueIndex++;

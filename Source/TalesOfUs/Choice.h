@@ -48,5 +48,11 @@ struct FChoice
     FName SecondChoiceLevel;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FText FirstChoiceText;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FText SecondChoiceText;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<FDialogueItem> DialogueLines;
 };
