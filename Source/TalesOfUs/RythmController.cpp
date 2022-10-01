@@ -120,19 +120,24 @@ void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 	UGameplayStatics::PlaySound2D(this, LiftSFX);
 }
 
-void ARythmController::DropLeg(int32 LegIndex, float Duration)
+bool ARythmController::IsLegOverlapping(const FLegState& LegState)
 {
-	CancelAnimation(true);
-
-	FLegState& LegState = LegStates[LegIndex];
-
 	bool bIsOverlapping = false;
 	for (FLegState& ItLegState : LegStates) {
 		if (&ItLegState != &LegState && FMath::Abs(ItLegState.CurrentPosition.X - LegState.CurrentPosition.X) <= 10.0f) {
 			bIsOverlapping = true;
 		}
 	}
-	if (bIsOverlapping) {
+	return bIsOverlapping;
+}
+
+void ARythmController::DropLeg(int32 LegIndex, float Duration)
+{
+	CancelAnimation(true);
+
+	FLegState& LegState = LegStates[LegIndex];
+
+	if (IsLegOverlapping(LegState)) {
 		Stumble();
 	} else {
 		LiftedLegIndex = -1;
@@ -168,7 +173,9 @@ void ARythmController::AdvanceLeg(int32 LegIndex, float Duration)
 	CancelAnimation(true);
 
 	FLegState& LegState = LegStates[LegIndex];
-	LegState.CurrentPosition.X += 100.0f;
+	do {
+		LegState.CurrentPosition.X += 100.0f;
+	} while (IsLegOverlapping(LegState));
 
 	FHitResult HitResult;
 	GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
@@ -185,28 +192,42 @@ void ARythmController::AdvanceLeg(int32 LegIndex, float Duration)
 
 void ARythmController::PerformIdleAction(float Duration)
 {
-	if (LiftedLegIndex >= 0) {
-		AdvanceLeg(LiftedLegIndex, Duration);
+	if (BeatIndex == 0) {
+		if (LiftedLegIndex == -1) {
+			LiftUpLastLeg(Duration);
+		}
+	} else if (BeatIndex == TimeSignature - 1) {
+		if (LiftedLegIndex >= 0) {
+			DropLeg(LiftedLegIndex, Duration);
+		}
 	} else {
-		CancelAnimation(true);
-		if (IdleBeatSFX != nullptr) {
-			UGameplayStatics::PlaySound2D(this, IdleBeatSFX, 1.0f, 1.0f, Duration - BeatInterval);
+		if (LiftedLegIndex >= 0) {
+			AdvanceLeg(LiftedLegIndex, Duration);
 		}
 	}
+}
+
+void ARythmController::LiftUpLastLeg(float Duration)
+{
+	int32 LegToLift = 0;
+	float MinX = INFINITY;
+	for (int32 Index = 0; Index < Legs.Num(); Index += 1) {
+		float X = LegStates[Index].CurrentPosition.X;
+		if (X < MinX) {
+			MinX = X;
+			LegToLift = Index;
+		}
+	}
+
+	LiftUpLeg(LegToLift, Duration);
 }
 
 
 void ARythmController::PerformAction(float Duration)
 {
 	if (LiftedLegIndex >= 0) {
+		bPerformedActionThisBeat = true;
 		DropLeg(LiftedLegIndex, Duration);
-	} else {
-		LiftUpLeg(NextLegToLift, Duration);
-
-		NextLegToLift += 1;
-		if (NextLegToLift >= Legs.Num()) {
-			NextLegToLift = 0;
-		}
 	}
 }
 
@@ -228,7 +249,6 @@ void ARythmController::HandleJump()
 {
 	if (!bIsEnabled) return;
 	if (TimeToBeat <= FMath::Min(BeatInterval * 0.5, FMath::Max(UndershootTolerance * BeatInterval, MinUndershootTolerance))) {
-		bPerformedActionThisBeat = true;
 		if (TimeToBeat <= QuantizeTolerance) {
 			bQueuedAction = true;
 		} else {
@@ -268,6 +288,7 @@ void ARythmController::Tick(float DeltaTime)
 			}
 
 			TimeToBeat += BeatInterval;
+			BeatIndex = (BeatIndex + 1) % TimeSignature;
 
 			if (bQueuedAction) {
 				bQueuedAction = false;
@@ -286,6 +307,7 @@ void ARythmController::Tick(float DeltaTime)
 void ARythmController::StartLevel(const FLevelInfo& LevelInfo)
 {
 	BeatInterval = 60.0f / LevelInfo.BeatsPerMinute;
+	BeatIndex = -1;
 	bIsEnabled = true;
 
 	// 1s for buffering

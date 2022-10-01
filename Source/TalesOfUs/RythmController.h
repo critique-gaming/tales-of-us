@@ -57,26 +57,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USoundBase* StumbleSFX;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class USoundBase* IdleBeatSFX;
-
 	UPROPERTY(EditAnywhere)
 	float OvershootTolerance = 0.25; // Percent of beat interval
 
 	UPROPERTY(EditAnywhere)
 	float UndershootTolerance = 0.25; // Percent of beat interval
-									  //
+
 	UPROPERTY(EditAnywhere)
 	float MinOvershootTolerance = 0.15; // Seconds
 
 	UPROPERTY(EditAnywhere)
 	float MinUndershootTolerance = 0.15; // Seconds
-										 //
+
 	UPROPERTY(EditAnywhere)
-	FVector LiftedOffset = {0.0f, 0.0f, 100.0f};
+	FVector LiftedOffset = {0.0f, 0.0f, 200.0f};
 
 	UPROPERTY(EditAnywhere)
 	float QuantizeTolerance = 0.2; // Seconds
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 TimeSignature = 8;
 
 public:
 	UPROPERTY(BlueprintReadOnly)
@@ -86,7 +86,13 @@ public:
 	float BeatInterval = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
+	int32 BeatIndex = 0;
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsEnabled = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 LiftedLegIndex = -1;
 
 private:
 	UPROPERTY()
@@ -95,8 +101,6 @@ private:
 
 	bool bPerformedActionThisBeat = false;
 	bool bQueuedAction = false;
-	int32 LiftedLegIndex = -1;
-	int32 NextLegToLift = 0;
 	FVector CameraOffset;
 	FVector CameraTarget;
 
@@ -117,6 +121,7 @@ private:
 	void HandleLevelChange();
 
 	void LiftUpLeg(int32 LegIndex, float Duration);
+	void LiftUpLastLeg(float Duration);
 	void DropLeg(int32 LegIndex, float Duration);
 	void PerformAction(float Duration);
 	void Stumble();
@@ -129,6 +134,8 @@ private:
 	void QueueStartLevel(const struct FLevelInfo& LevelInfo);
 	void StartLevel(const struct FLevelInfo& LevelInfo);
 	void StopLevel();
+
+	bool IsLegOverlapping(const FLegState& LegState);
 
 protected:
 	void Tick(float DeltaTime) override;
