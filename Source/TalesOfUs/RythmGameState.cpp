@@ -148,7 +148,7 @@ void ARythmGameState::AdvanceLevel(FName LevelId)
 	OnLevelChange.Broadcast();
 
 	// TODO: Delete
-	EndLevel();
+	// EndLevel();
 }
 
 void ARythmGameState::Jump()
