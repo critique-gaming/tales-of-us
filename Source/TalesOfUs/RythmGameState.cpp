@@ -1,6 +1,7 @@
 #include "RythmGameState.h"
 #include "TalesOfUs/UI/MainUI.h"
 #include "ObstacleActor.h"
+#include "TimerManager.h"
 
 void ARythmGameState::BeginPlay()
 {
@@ -13,7 +14,14 @@ void ARythmGameState::BeginPlay()
 
 	MainUI->AddToViewport();
 
-	AdvanceLevel(FName(TEXT("TestLevel")));
+	FTimerHandle StartTimer;
+	GetWorld()->GetTimerManager().SetTimer(StartTimer, FTimerDelegate::CreateWeakLambda(this, [this]() {
+		if (!StartingChoiceId.IsNone()) {
+			ShowChoiceDialog(StartingChoiceId);
+		} else if (!StartingLevelId.IsNone()) {
+			AdvanceLevel(StartingLevelId);
+		}
+	}), 0.5, false);
 }
 
 void ARythmGameState::EndLevel()
@@ -56,25 +64,33 @@ void ARythmGameState::AdvanceEndLevelDialogue()
 
 void ARythmGameState::ShowOption()
 {
-	OnOptionChange.Broadcast(SelectedLevel->Choice.FirstCharacter, SelectedLevel->Choice.SecondCharacter);
+	if (!SelectedLevel->ChoiceId.IsNone()) {
+		ShowChoiceDialog(SelectedLevel->ChoiceId);
+	}
+}
+
+void ARythmGameState::ShowChoiceDialog(FName ChoiceId)
+{
+	CurrentChoice = &Choices[ChoiceId];
+	OnOptionChange.Broadcast(CurrentChoice->FirstCharacter, CurrentChoice->SecondCharacter);
 }
 
 void ARythmGameState::AdvanceOptionsDialogue()
 {
-	if (OptionDialogueIndex > SelectedLevel->Choice.DialogueLines.Num()) { return; }
+	if (OptionDialogueIndex > CurrentChoice->DialogueLines.Num()) { return; }
 
-	if (OptionDialogueIndex == SelectedLevel->Choice.DialogueLines.Num()) {
-		const FText& LeftText = SelectedLevel->Choice.FirstChoiceText;
-		FName LeftId = SelectedLevel->Choice.FirstChoiceLevel;
-		const FText& RightText = SelectedLevel->Choice.SecondChoiceText;
-		FName RightId = SelectedLevel->Choice.FirstChoiceLevel;
+	if (OptionDialogueIndex == CurrentChoice->DialogueLines.Num()) {
+		const FText& LeftText = CurrentChoice->FirstChoiceText;
+		FName LeftId = CurrentChoice->FirstChoiceLevel;
+		const FText& RightText = CurrentChoice->SecondChoiceText;
+		FName RightId = CurrentChoice->FirstChoiceLevel;
 
 		OnButtonUpdate.Broadcast(LeftText, LeftId, RightText, RightId);
 		OptionDialogueIndex++;
 		return;
 	}
 
-	OnAdvanceOptionDialogue.Broadcast(SelectedLevel->Choice.DialogueLines[OptionDialogueIndex]);
+	OnAdvanceOptionDialogue.Broadcast(CurrentChoice->DialogueLines[OptionDialogueIndex]);
 	OptionDialogueIndex++;
 }
 

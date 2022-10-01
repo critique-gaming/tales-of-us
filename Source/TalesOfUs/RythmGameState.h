@@ -4,6 +4,7 @@
 
 #include "GameFramework/GameStateBase.h"
 #include "LevelInfo.h"
+#include "Choice.h"
 
 #include "RythmGameState.generated.h"
 
@@ -49,6 +50,16 @@ public:
 	UPROPERTY(EditAnywhere)
 	TMap<FName, FLevelInfo> LevelInfoMap;
 
+	UPROPERTY(EditAnywhere)
+	TMap<FName, FChoice> Choices;
+
+	UPROPERTY(EditAnywhere)
+	FName StartingChoiceId;
+
+	UPROPERTY(EditAnywhere)
+	FName StartingLevelId;
+
+	FChoice * CurrentChoice = nullptr;
 	FLevelInfo* SelectedLevel = nullptr;
 	FLevelResult* LevelResult = nullptr;
 
@@ -67,6 +78,9 @@ public:
 
 	UFUNCTION()
 	void ShowOption();
+
+	UFUNCTION()
+	void ShowChoiceDialog(FName ChoiceId);
 
 private:
 	UPROPERTY()

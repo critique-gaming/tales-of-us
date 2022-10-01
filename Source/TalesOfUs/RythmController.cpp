@@ -129,14 +129,16 @@ void ARythmController::DropLeg(int32 LegIndex, float Duration)
 	}
 
 	if (ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState())) {
-		bool bHasFinished = true;
-		for (FLegState& ItLegState : LegStates) {
-			if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
-				bHasFinished = false;
+		if (GameState->LevelEndActor != nullptr) {
+			bool bHasFinished = true;
+			for (FLegState& ItLegState : LegStates) {
+				if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
+					bHasFinished = false;
+				}
 			}
-		}
-		if (bHasFinished) {
-			GameState->EndLevel();
+			if (bHasFinished) {
+				GameState->EndLevel();
+			}
 		}
 	}
 }
