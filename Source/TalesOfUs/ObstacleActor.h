@@ -20,4 +20,6 @@ public:
 
 	void BeginPlay() override;
 	void Squish();
+
+	void Reset() override;
 };

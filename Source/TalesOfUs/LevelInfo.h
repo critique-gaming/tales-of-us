@@ -16,6 +16,9 @@ struct FLevelInfo
 	FName ChoiceId;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName MapId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float BeatsPerMinute = 130.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)

@@ -23,7 +23,8 @@ void ARythmController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+	GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+	GameState->RythmController = this;
 
 	if (GameState != nullptr) {
 		GameState->OnJump.AddDynamic(this, &ARythmController::HandleJump);
@@ -35,15 +36,9 @@ void ARythmController::BeginPlay()
 		FLegState LegState;
 		LegState.CurrentPosition = Actor->GetActorLocation();
 		LegState.LastPosition = LegState.CurrentPosition;
+		LegState.InitialPosition = LegState.CurrentPosition;
 		LegState.Actor = Actor;
 		LegState.Index = LegStates.Num();
-
-		FHitResult HitResult;
-		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
-		if (HitResult.IsValidBlockingHit()) {
-			LegState.RaycastOffset = HitResult.Location - LegState.CurrentPosition;
-		}
-
 		LegStates.Add(LegState);
 	}
 
@@ -70,17 +65,8 @@ void ARythmController::CancelAnimation(bool bComplete)
 	}
 }
 
-void ARythmController::ApplyLegAnimation(FLegState& LegState)
+void ARythmController::UpdateCamera()
 {
-	FVector Position = LegState.bIsLifted ? LegState.CurrentPosition + LiftedOffset : LegState.CurrentPosition;
-
-	UTweenerSubsystem* TweenerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UTweenerSubsystem>();
-	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, Position, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
-	LegState.Tween->CompleteNonDynamic.BindWeakLambda(this, [this, &LegState]() {
-		LegState.LastPosition = LegState.CurrentPosition;
-	});
-	TweenerSubsystem->StartTween(LegState.Tween);
-
 	FVector FirstLegPosition(INFINITY, 0.0f, 0.0f);
 	float AverageZ = 0.0f;
 	for (FLegState& ItLegState : LegStates) {
@@ -95,6 +81,20 @@ void ARythmController::ApplyLegAnimation(FLegState& LegState)
 	CameraTarget = FirstLegPosition + CameraOffset;
 }
 
+void ARythmController::ApplyLegAnimation(FLegState& LegState)
+{
+	FVector Position = LegState.bIsLifted ? LegState.CurrentPosition + LiftedOffset : LegState.CurrentPosition;
+
+	UTweenerSubsystem* TweenerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UTweenerSubsystem>();
+	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, Position, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
+	LegState.Tween->CompleteNonDynamic.BindWeakLambda(this, [this, &LegState]() {
+		LegState.LastPosition = LegState.CurrentPosition;
+	});
+	TweenerSubsystem->StartTween(LegState.Tween);
+
+	UpdateCamera();
+}
+
 void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 {
 	CancelAnimation(true);
@@ -102,7 +102,19 @@ void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 	LiftedLegIndex = LegIndex;
 
 	FLegState& LegState = LegStates[LegIndex];
+
+	if (!LegState.bHasRaycastOffset) {
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
+		if (HitResult.IsValidBlockingHit()) {
+			LegState.RaycastOffset = HitResult.Location - LegState.CurrentPosition;
+		} else {
+			LegState.RaycastOffset = FVector();
+		}
+	}
+
 	LegState.bIsLifted = true;
+	LegState.LiftPosition = LegState.CurrentPosition;
 	ApplyLegAnimation(LegState);
 
 	UGameplayStatics::PlaySound2D(this, LiftSFX);
@@ -112,33 +124,41 @@ void ARythmController::DropLeg(int32 LegIndex, float Duration)
 {
 	CancelAnimation(true);
 
-	LiftedLegIndex = -1;
-
 	FLegState& LegState = LegStates[LegIndex];
-	LegState.bIsLifted = false;
-	ApplyLegAnimation(LegState);
 
-	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, ObstacleTrace);
-	if (AObstacleActor* HitActor = Cast<AObstacleActor>(HitResult.GetActor())) {
-		HitActor->Squish();
+	bool bIsOverlapping = false;
+	for (FLegState& ItLegState : LegStates) {
+		if (&ItLegState != &LegState && FMath::Abs(ItLegState.CurrentPosition.X - LegState.CurrentPosition.X) <= 10.0f) {
+			bIsOverlapping = true;
+		}
+	}
+	if (bIsOverlapping) {
+		Stumble();
 	} else {
-		if (DropSFX != nullptr) {
-			UGameplayStatics::PlaySound2D(this, DropSFX);
+		LiftedLegIndex = -1;
+		LegState.bIsLifted = false;
+		ApplyLegAnimation(LegState);
+
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, ObstacleTrace);
+		if (AObstacleActor* HitActor = Cast<AObstacleActor>(HitResult.GetActor())) {
+			HitActor->Squish();
+		} else {
+			if (DropSFX != nullptr) {
+				UGameplayStatics::PlaySound2D(this, DropSFX);
+			}
 		}
 	}
 
-	if (ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState())) {
-		if (GameState->LevelEndActor != nullptr) {
-			bool bHasFinished = true;
-			for (FLegState& ItLegState : LegStates) {
-				if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
-					bHasFinished = false;
-				}
+	if (GameState != nullptr && GameState->LevelEndActor != nullptr) {
+		bool bHasFinished = true;
+		for (FLegState& ItLegState : LegStates) {
+			if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
+				bHasFinished = false;
 			}
-			if (bHasFinished) {
-				GameState->EndLevel();
-			}
+		}
+		if (bHasFinished) {
+			GameState->EndLevel();
 		}
 	}
 }
@@ -196,10 +216,17 @@ void ARythmController::Stumble()
 	if (StumbleSFX != nullptr) {
 		UGameplayStatics::PlaySound2D(this, StumbleSFX);
 	}
+
+	if (LiftedLegIndex >= 0) {
+		FLegState& LegState = LegStates[LiftedLegIndex];
+		LegState.CurrentPosition = LegState.LastPosition = LegState.LiftPosition;
+		ApplyLegAnimation(LegState);
+	}
 }
 
 void ARythmController::HandleJump()
 {
+	if (!bIsEnabled) return;
 	if (TimeToBeat <= FMath::Min(BeatInterval * 0.5, FMath::Max(UndershootTolerance * BeatInterval, MinUndershootTolerance))) {
 		bPerformedActionThisBeat = true;
 		if (TimeToBeat <= QuantizeTolerance) {
@@ -234,6 +261,10 @@ void ARythmController::Tick(float DeltaTime)
 				StartLevel(*QueuedLevelToStart);
 				QueuedLevelToStart = nullptr;
 				break;
+			}
+
+			if (GameState != nullptr) {
+				GameState->OnBeat.Broadcast();
 			}
 
 			TimeToBeat += BeatInterval;
@@ -280,8 +311,21 @@ void ARythmController::QueueStartLevel(const struct FLevelInfo& LevelInfo)
 
 void ARythmController::HandleLevelChange()
 {
-	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
 	check(GameState != nullptr);
+
+	CancelAnimation(true);
+
+	LiftedLegIndex = -1;
+	for (FLegState& LegState : LegStates) {
+		LegState.Actor->SetActorLocation(LegState.InitialPosition);
+		LegState.CurrentPosition = LegState.LastPosition = LegState.InitialPosition;
+		LegState.bIsLifted = false;
+		LegState.bHasRaycastOffset = false;
+	}
+
+	UpdateCamera();
+	Camera->SetActorLocation(CameraTarget);
+
 	QueueStartLevel(*GameState->SelectedLevel);
 }
 

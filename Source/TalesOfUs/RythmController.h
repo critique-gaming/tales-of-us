@@ -9,8 +9,11 @@ struct FLegState {
 
 	bool bIsLifted = false;
 
+	bool bHasRaycastOffset = false;
 	FVector RaycastOffset;
 
+	FVector LiftPosition;
+	FVector InitialPosition;
 	FVector CurrentPosition;
 	FVector LastPosition;
 
@@ -75,20 +78,30 @@ public:
 	UPROPERTY(EditAnywhere)
 	float QuantizeTolerance = 0.2; // Seconds
 
+public:
+	UPROPERTY(BlueprintReadOnly)
+	float TimeToBeat = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	float BeatInterval = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsEnabled = false;
+
 private:
 	UPROPERTY()
 	TArray<FLegState> LegStates;
 
-	bool bIsEnabled = false;
 
-	float TimeToBeat = 0.0f;
-	float BeatInterval = 0.0f;
 	bool bPerformedActionThisBeat = false;
 	bool bQueuedAction = false;
 	int32 LiftedLegIndex = -1;
 	int32 NextLegToLift = 0;
 	FVector CameraOffset;
 	FVector CameraTarget;
+
+	UPROPERTY()
+	class ARythmGameState* GameState = nullptr;
 
 	const struct FLevelInfo* QueuedLevelToStart = nullptr;
 
@@ -111,6 +124,7 @@ private:
 	void PerformIdleAction(float Duration);
 	void CancelAnimation(bool bComplete);
 	void ApplyLegAnimation(FLegState& LegState);
+	void UpdateCamera();
 
 	void QueueStartLevel(const struct FLevelInfo& LevelInfo);
 	void StartLevel(const struct FLevelInfo& LevelInfo);
