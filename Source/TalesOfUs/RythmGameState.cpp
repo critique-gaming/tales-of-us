@@ -2,6 +2,7 @@
 #include "TalesOfUs/UI/MainUI.h"
 #include "ObstacleActor.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 void ARythmGameState::BeginPlay()
 {
@@ -21,7 +22,7 @@ void ARythmGameState::BeginPlay()
 		} else if (!StartingLevelId.IsNone()) {
 			AdvanceLevel(StartingLevelId);
 		}
-	}), 0.5, false);
+	}), 0.01, false);
 }
 
 void ARythmGameState::EndLevel()
@@ -38,10 +39,14 @@ void ARythmGameState::EndLevel()
 	SelectedLevel->ResultMap.GenerateKeyArray(Tresholds);
 	Tresholds.Sort();
 
+	UE_LOG(LogTemp, Display, TEXT("Score %f"), Score);
+
 	LevelResult = nullptr;
-	for (float Treshold : Tresholds) {
+	for (int32 Index = Tresholds.Num() - 1; Index >= 0; Index -= 1) {
+		float Treshold = Tresholds[Index];
 		if (Score <= Treshold) {
 			LevelResult = &SelectedLevel->ResultMap[Treshold];
+			UE_LOG(LogTemp, Display, TEXT("Met threshold %f"), Treshold);
 		}
 	}
 
@@ -96,9 +101,30 @@ void ARythmGameState::AdvanceOptionsDialogue()
 
 void ARythmGameState::AdvanceLevel(FName LevelId)
 {
+	FName LoadedLevel;
+	if (SelectedLevel != nullptr) LoadedLevel = SelectedLevel->MapId;
+
 	EndLevelDialogueIndex = 0;
 	OptionDialogueIndex = 0;
 	SelectedLevel = &LevelInfoMap[LevelId];
+
+	for (AObstacleActor* Obstacle : Obstacles) {
+		Obstacle->Reset();
+	}
+
+	if (LoadedLevel != SelectedLevel->MapId) {
+		Obstacles.Empty();
+		LevelEndActor = nullptr;
+
+		if (!LoadedLevel.IsNone()) {
+			FLatentActionInfo LatentInfo;
+			UGameplayStatics::UnloadStreamLevel(this, SelectedLevel->MapId, LatentInfo, true);
+		}
+		if (!SelectedLevel->MapId.IsNone()) {
+			FLatentActionInfo LatentInfo;
+			UGameplayStatics::LoadStreamLevel(this, SelectedLevel->MapId, true, true, LatentInfo);
+		}
+	}
 
 	OnLevelChange.Broadcast();
 

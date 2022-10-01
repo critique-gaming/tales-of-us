@@ -21,3 +21,9 @@ void AObstacleActor::Squish()
 	}
 	UE_LOG(LogTemp, Display, TEXT("Squish"));
 }
+
+void AObstacleActor::Reset()
+{
+	Super::Reset();
+	bWasSquished = false;
+}

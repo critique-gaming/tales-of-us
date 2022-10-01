@@ -35,15 +35,9 @@ void ARythmController::BeginPlay()
 		FLegState LegState;
 		LegState.CurrentPosition = Actor->GetActorLocation();
 		LegState.LastPosition = LegState.CurrentPosition;
+		LegState.InitialPosition = LegState.CurrentPosition;
 		LegState.Actor = Actor;
 		LegState.Index = LegStates.Num();
-
-		FHitResult HitResult;
-		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
-		if (HitResult.IsValidBlockingHit()) {
-			LegState.RaycastOffset = HitResult.Location - LegState.CurrentPosition;
-		}
-
 		LegStates.Add(LegState);
 	}
 
@@ -70,17 +64,8 @@ void ARythmController::CancelAnimation(bool bComplete)
 	}
 }
 
-void ARythmController::ApplyLegAnimation(FLegState& LegState)
+void ARythmController::UpdateCamera()
 {
-	FVector Position = LegState.bIsLifted ? LegState.CurrentPosition + LiftedOffset : LegState.CurrentPosition;
-
-	UTweenerSubsystem* TweenerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UTweenerSubsystem>();
-	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, Position, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
-	LegState.Tween->CompleteNonDynamic.BindWeakLambda(this, [this, &LegState]() {
-		LegState.LastPosition = LegState.CurrentPosition;
-	});
-	TweenerSubsystem->StartTween(LegState.Tween);
-
 	FVector FirstLegPosition(INFINITY, 0.0f, 0.0f);
 	float AverageZ = 0.0f;
 	for (FLegState& ItLegState : LegStates) {
@@ -95,6 +80,20 @@ void ARythmController::ApplyLegAnimation(FLegState& LegState)
 	CameraTarget = FirstLegPosition + CameraOffset;
 }
 
+void ARythmController::ApplyLegAnimation(FLegState& LegState)
+{
+	FVector Position = LegState.bIsLifted ? LegState.CurrentPosition + LiftedOffset : LegState.CurrentPosition;
+
+	UTweenerSubsystem* TweenerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UTweenerSubsystem>();
+	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, Position, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
+	LegState.Tween->CompleteNonDynamic.BindWeakLambda(this, [this, &LegState]() {
+		LegState.LastPosition = LegState.CurrentPosition;
+	});
+	TweenerSubsystem->StartTween(LegState.Tween);
+
+	UpdateCamera();
+}
+
 void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 {
 	CancelAnimation(true);
@@ -102,6 +101,17 @@ void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 	LiftedLegIndex = LegIndex;
 
 	FLegState& LegState = LegStates[LegIndex];
+
+	if (!LegState.bHasRaycastOffset) {
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
+		if (HitResult.IsValidBlockingHit()) {
+			LegState.RaycastOffset = HitResult.Location - LegState.CurrentPosition;
+		} else {
+			LegState.RaycastOffset = FVector();
+		}
+	}
+
 	LegState.bIsLifted = true;
 	ApplyLegAnimation(LegState);
 
@@ -200,6 +210,7 @@ void ARythmController::Stumble()
 
 void ARythmController::HandleJump()
 {
+	if (!bIsEnabled) return;
 	if (TimeToBeat <= FMath::Min(BeatInterval * 0.5, FMath::Max(UndershootTolerance * BeatInterval, MinUndershootTolerance))) {
 		bPerformedActionThisBeat = true;
 		if (TimeToBeat <= QuantizeTolerance) {
@@ -282,6 +293,20 @@ void ARythmController::HandleLevelChange()
 {
 	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
 	check(GameState != nullptr);
+
+	CancelAnimation(true);
+
+	LiftedLegIndex = -1;
+	for (FLegState& LegState : LegStates) {
+		LegState.Actor->SetActorLocation(LegState.InitialPosition);
+		LegState.CurrentPosition = LegState.LastPosition = LegState.InitialPosition;
+		LegState.bIsLifted = false;
+		LegState.bHasRaycastOffset = false;
+	}
+
+	UpdateCamera();
+	Camera->SetActorLocation(CameraTarget);
+
 	QueueStartLevel(*GameState->SelectedLevel);
 }
 

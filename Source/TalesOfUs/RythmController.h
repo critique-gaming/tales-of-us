@@ -9,8 +9,10 @@ struct FLegState {
 
 	bool bIsLifted = false;
 
+	bool bHasRaycastOffset = false;
 	FVector RaycastOffset;
 
+	FVector InitialPosition;
 	FVector CurrentPosition;
 	FVector LastPosition;
 
@@ -111,6 +113,7 @@ private:
 	void PerformIdleAction(float Duration);
 	void CancelAnimation(bool bComplete);
 	void ApplyLegAnimation(FLegState& LegState);
+	void UpdateCamera();
 
 	void QueueStartLevel(const struct FLevelInfo& LevelInfo);
 	void StartLevel(const struct FLevelInfo& LevelInfo);
