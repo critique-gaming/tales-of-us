@@ -40,6 +40,9 @@ public:
 	FRythmSimpleDelegate OnHideEndLevel;
 
 	UPROPERTY()
+	FRythmSimpleDelegate OnBeat;
+
+	UPROPERTY()
 	FAdvanceOptionDialogueDelegate OnAdvanceOptionDialogue;
 
 	UPROPERTY()
@@ -110,7 +113,10 @@ public:
 	TArray<class AObstacleActor*> Obstacles;
 
 	UPROPERTY(BlueprintReadWrite)
-	AActor* LevelEndActor;
+	AActor* LevelEndActor = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	class ARythmController* RythmController = nullptr;
 
 protected:
 	void BeginPlay() override;

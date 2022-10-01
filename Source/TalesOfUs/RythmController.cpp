@@ -23,7 +23,8 @@ void ARythmController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+	GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+	GameState->RythmController = this;
 
 	if (GameState != nullptr) {
 		GameState->OnJump.AddDynamic(this, &ARythmController::HandleJump);
@@ -149,17 +150,15 @@ void ARythmController::DropLeg(int32 LegIndex, float Duration)
 		}
 	}
 
-	if (ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState())) {
-		if (GameState->LevelEndActor != nullptr) {
-			bool bHasFinished = true;
-			for (FLegState& ItLegState : LegStates) {
-				if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
-					bHasFinished = false;
-				}
+	if (GameState != nullptr && GameState->LevelEndActor != nullptr) {
+		bool bHasFinished = true;
+		for (FLegState& ItLegState : LegStates) {
+			if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
+				bHasFinished = false;
 			}
-			if (bHasFinished) {
-				GameState->EndLevel();
-			}
+		}
+		if (bHasFinished) {
+			GameState->EndLevel();
 		}
 	}
 }
@@ -264,6 +263,10 @@ void ARythmController::Tick(float DeltaTime)
 				break;
 			}
 
+			if (GameState != nullptr) {
+				GameState->OnBeat.Broadcast();
+			}
+
 			TimeToBeat += BeatInterval;
 
 			if (bQueuedAction) {
@@ -308,7 +311,6 @@ void ARythmController::QueueStartLevel(const struct FLevelInfo& LevelInfo)
 
 void ARythmController::HandleLevelChange()
 {
-	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
 	check(GameState != nullptr);
 
 	CancelAnimation(true);
