@@ -113,6 +113,7 @@ void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 	}
 
 	LegState.bIsLifted = true;
+	LegState.LiftPosition = LegState.CurrentPosition;
 	ApplyLegAnimation(LegState);
 
 	UGameplayStatics::PlaySound2D(this, LiftSFX);
@@ -122,19 +123,29 @@ void ARythmController::DropLeg(int32 LegIndex, float Duration)
 {
 	CancelAnimation(true);
 
-	LiftedLegIndex = -1;
-
 	FLegState& LegState = LegStates[LegIndex];
-	LegState.bIsLifted = false;
-	ApplyLegAnimation(LegState);
 
-	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, ObstacleTrace);
-	if (AObstacleActor* HitActor = Cast<AObstacleActor>(HitResult.GetActor())) {
-		HitActor->Squish();
+	bool bIsOverlapping = false;
+	for (FLegState& ItLegState : LegStates) {
+		if (&ItLegState != &LegState && FMath::Abs(ItLegState.CurrentPosition.X - LegState.CurrentPosition.X) <= 10.0f) {
+			bIsOverlapping = true;
+		}
+	}
+	if (bIsOverlapping) {
+		Stumble();
 	} else {
-		if (DropSFX != nullptr) {
-			UGameplayStatics::PlaySound2D(this, DropSFX);
+		LiftedLegIndex = -1;
+		LegState.bIsLifted = false;
+		ApplyLegAnimation(LegState);
+
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, ObstacleTrace);
+		if (AObstacleActor* HitActor = Cast<AObstacleActor>(HitResult.GetActor())) {
+			HitActor->Squish();
+		} else {
+			if (DropSFX != nullptr) {
+				UGameplayStatics::PlaySound2D(this, DropSFX);
+			}
 		}
 	}
 
@@ -205,6 +216,12 @@ void ARythmController::Stumble()
 	UE_LOG(LogTemp, Display, TEXT("Stumble"));
 	if (StumbleSFX != nullptr) {
 		UGameplayStatics::PlaySound2D(this, StumbleSFX);
+	}
+
+	if (LiftedLegIndex >= 0) {
+		FLegState& LegState = LegStates[LiftedLegIndex];
+		LegState.CurrentPosition = LegState.LastPosition = LegState.LiftPosition;
+		ApplyLegAnimation(LegState);
 	}
 }
 

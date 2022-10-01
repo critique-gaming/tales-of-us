@@ -12,6 +12,7 @@ struct FLegState {
 	bool bHasRaycastOffset = false;
 	FVector RaycastOffset;
 
+	FVector LiftPosition;
 	FVector InitialPosition;
 	FVector CurrentPosition;
 	FVector LastPosition;
