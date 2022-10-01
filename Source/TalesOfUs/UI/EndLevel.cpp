@@ -20,7 +20,7 @@ void UEndLevel::AddDialogueLine(FText Text)
 void UEndLevel::UpdateVisuals(FLevelResult* LevelResult)
 {
     SetVisibility(ESlateVisibility::Visible);
-	if (LevelResult->CharacterBrush != nullptr) {
+	if (LevelResult != nullptr) {
 		ResultImage->SetBrush(LevelResult->CharacterBrush);
 	}
     // TODO: Appear animation
