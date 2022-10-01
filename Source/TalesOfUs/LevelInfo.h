@@ -15,4 +15,13 @@ struct FLevelInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FChoice Choice;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float BeatsPerMinute = 130.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float BeatStartOffset = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class USoundBase* Music;
 };

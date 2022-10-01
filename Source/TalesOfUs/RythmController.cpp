@@ -1,20 +1,31 @@
 #include "RythmController.h"
 #include "RythmGameState.h"
+#include "LevelInfo.h"
+#include "ObstacleActor.h"
 
 #include "TweenerSubsystem.h"
 #include "Tween.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+
+#define GroundTrace ECollisionChannel::ECC_GameTraceChannel1
+#define ObstacleTrace ECollisionChannel::ECC_GameTraceChannel2
 
 ARythmController::ARythmController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+static const FVector VeryUp(0.0f, 0.0f, 9999.0f);
+static const FVector VeryDown(0.0f, 0.0f, -9999.0f);
+
 void ARythmController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState())) {
+	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+
+	if (GameState != nullptr) {
 		GameState->OnJump.AddDynamic(this, &ARythmController::HandleJump);
 	}
 
@@ -24,14 +35,22 @@ void ARythmController::BeginPlay()
 		LegState.LastPosition = LegState.CurrentPosition;
 		LegState.Actor = Actor;
 		LegState.Index = LegStates.Num();
+
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
+		if (HitResult.IsValidBlockingHit()) {
+			LegState.RaycastOffset = HitResult.Location - LegState.CurrentPosition;
+		}
+
 		LegStates.Add(LegState);
 	}
 
 	CameraTarget = Camera->GetActorLocation();
 	CameraOffset = CameraTarget - LegStates[0].Actor->GetActorLocation();
 
-	BeatInterval = 60.0 / BeatsPerMinute;
-	TimeToBeat = BeatInterval;
+	if (GameState != nullptr) {
+		QueueStartLevel(GameState->LevelInfoMap.begin()->Value);
+	}
 }
 
 void ARythmController::CancelAnimation(bool bComplete)
@@ -42,7 +61,7 @@ void ARythmController::CancelAnimation(bool bComplete)
 			LegState.CurrentPosition = bComplete ? LegState.CurrentPosition : LegState.LastPosition;
 			LegState.LastPosition = LegState.CurrentPosition;
 			if (LegState.Actor != nullptr) {
-				LegState.Actor->SetActorLocation(LegState.CurrentPosition);
+				LegState.Actor->SetActorLocation(LegState.bIsLifted ? LegState.CurrentPosition + LiftedOffset : LegState.CurrentPosition);
 			}
 		}
 		LegState.Tween = nullptr;
@@ -51,23 +70,25 @@ void ARythmController::CancelAnimation(bool bComplete)
 
 void ARythmController::ApplyLegAnimation(FLegState& LegState)
 {
+	FVector Position = LegState.bIsLifted ? LegState.CurrentPosition + LiftedOffset : LegState.CurrentPosition;
+
 	UTweenerSubsystem* TweenerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UTweenerSubsystem>();
-	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, LegState.CurrentPosition, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
+	LegState.Tween = UTween::ActorLocationTo(LegState.Actor, Position, false, BeatInterval * 0.5, EEaseType::QuarticEaseOut, ELoopType::None, 0, 0.0f, GetWorld());
 	LegState.Tween->CompleteNonDynamic.BindWeakLambda(this, [this, &LegState]() {
 		LegState.LastPosition = LegState.CurrentPosition;
 	});
 	TweenerSubsystem->StartTween(LegState.Tween);
 
 	FVector FirstLegPosition(INFINITY, 0.0f, 0.0f);
+	float AverageZ = 0.0f;
 	for (FLegState& ItLegState : LegStates) {
 		FVector LegPosition = ItLegState.CurrentPosition;
-		if (ItLegState.Index == LiftedLegIndex) {
-			LegPosition.Z -= 100.0f;
-		}
+		AverageZ += LegPosition.Z;
 		if (LegPosition.X < FirstLegPosition.X) {
 			FirstLegPosition = LegPosition;
 		}
 	}
+	FirstLegPosition.Z = AverageZ / LegStates.Num();
 
 	CameraTarget = FirstLegPosition + CameraOffset;
 }
@@ -79,7 +100,7 @@ void ARythmController::LiftUpLeg(int32 LegIndex, float Duration)
 	LiftedLegIndex = LegIndex;
 
 	FLegState& LegState = LegStates[LegIndex];
-	LegState.CurrentPosition.Z += 100.0f;
+	LegState.bIsLifted = true;
 	ApplyLegAnimation(LegState);
 
 	UGameplayStatics::PlaySound2D(this, LiftSFX);
@@ -91,17 +112,19 @@ void ARythmController::DropLeg(int32 LegIndex, float Duration)
 
 	LiftedLegIndex = -1;
 
-	if (false) { // If we squish something
-		// Call Squish on that something
-	} else {
-		UGameplayStatics::PlaySound2D(this, DropSFX);
-	}
-
 	FLegState& LegState = LegStates[LegIndex];
-	LegState.CurrentPosition.Z -= 100.0f;
+	LegState.bIsLifted = false;
 	ApplyLegAnimation(LegState);
 
-	UGameplayStatics::PlaySound2D(this, DropSFX);
+	FHitResult HitResult;
+	GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, ObstacleTrace);
+	if (AObstacleActor* HitActor = Cast<AObstacleActor>(HitResult.GetActor())) {
+		HitActor->Squish();
+	} else {
+		if (DropSFX != nullptr) {
+			UGameplayStatics::PlaySound2D(this, DropSFX);
+		}
+	}
 }
 
 void ARythmController::AdvanceLeg(int32 LegIndex, float Duration)
@@ -110,9 +133,18 @@ void ARythmController::AdvanceLeg(int32 LegIndex, float Duration)
 
 	FLegState& LegState = LegStates[LegIndex];
 	LegState.CurrentPosition.X += 100.0f;
+
+	FHitResult HitResult;
+	GetWorld()->LineTraceSingleByChannel(HitResult, LegState.CurrentPosition + VeryUp, LegState.CurrentPosition + VeryDown, GroundTrace);
+	if (HitResult.IsValidBlockingHit()) {
+		LegState.CurrentPosition = HitResult.Location - LegState.RaycastOffset;
+	}
+
 	ApplyLegAnimation(LegState);
 
-	UGameplayStatics::PlaySound2D(this, AdvanceSFX, 1.0f, 1.0f, Duration - BeatInterval);
+	if (AdvanceSFX != nullptr) {
+		UGameplayStatics::PlaySound2D(this, AdvanceSFX, 1.0f, 1.0f, Duration - BeatInterval);
+	}
 }
 
 void ARythmController::PerformIdleAction(float Duration)
@@ -121,7 +153,9 @@ void ARythmController::PerformIdleAction(float Duration)
 		AdvanceLeg(LiftedLegIndex, Duration);
 	} else {
 		CancelAnimation(true);
-		UGameplayStatics::PlaySound2D(this, IdleBeatSFX, 1.0f, 1.0f, Duration - BeatInterval);
+		if (IdleBeatSFX != nullptr) {
+			UGameplayStatics::PlaySound2D(this, IdleBeatSFX, 1.0f, 1.0f, Duration - BeatInterval);
+		}
 	}
 }
 
@@ -143,19 +177,21 @@ void ARythmController::PerformAction(float Duration)
 void ARythmController::Stumble()
 {
 	UE_LOG(LogTemp, Display, TEXT("Stumble"));
-	UGameplayStatics::PlaySound2D(this, StumbleSFX);
+	if (StumbleSFX != nullptr) {
+		UGameplayStatics::PlaySound2D(this, StumbleSFX);
+	}
 }
 
 void ARythmController::HandleJump()
 {
-	if ((TimeToBeat / BeatInterval) <= UndershootTolerance) {
+	if (TimeToBeat <= FMath::Min(BeatInterval * 0.5, FMath::Max(UndershootTolerance * BeatInterval, MinUndershootTolerance))) {
 		bPerformedActionThisBeat = true;
 		if (TimeToBeat <= QuantizeTolerance) {
 			bQueuedAction = true;
 		} else {
 			PerformAction(TimeToBeat + BeatInterval);
 		}
-	} else if (((BeatInterval - TimeToBeat) / BeatInterval) <= OvershootTolerance) {
+	} else if (BeatInterval - TimeToBeat <= FMath::Min(BeatInterval * 0.5, FMath::Max(OvershootTolerance * BeatInterval, MinOvershootTolerance))) {
 		CancelAnimation(false);
 		PerformAction(BeatInterval);
 	} else {
@@ -173,22 +209,65 @@ void ARythmController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	TimeToBeat -= DeltaTime;
-	float Offshoot = (BeatInterval - TimeToBeat) / BeatInterval;
+	if (bIsEnabled) {
+		TimeToBeat -= DeltaTime;
+		float Offshoot = (BeatInterval - TimeToBeat) / BeatInterval;
 
-	while (TimeToBeat <= 0.0f) {
-		BeatInterval = 60.0 / BeatsPerMinute;
-		TimeToBeat += BeatInterval;
+		while (TimeToBeat <= 0.0f) {
+			if (QueuedLevelToStart) {
+				StartLevel(*QueuedLevelToStart);
+				QueuedLevelToStart = nullptr;
+				break;
+			}
 
-		if (bQueuedAction) {
-			bQueuedAction = false;
-			PerformAction(TimeToBeat);
+			TimeToBeat += BeatInterval;
+
+			if (bQueuedAction) {
+				bQueuedAction = false;
+				PerformAction(TimeToBeat);
+			}
+			if (!bPerformedActionThisBeat) {
+				PerformIdleAction(TimeToBeat);
+			}
+			bPerformedActionThisBeat = false;
 		}
-		if (!bPerformedActionThisBeat) {
-			PerformIdleAction(TimeToBeat);
-		}
-		bPerformedActionThisBeat = false;
 	}
 
 	Camera->SetActorLocation(LowPassFilter(Camera->GetActorLocation(), CameraTarget, 1.0f, DeltaTime));
+}
+
+void ARythmController::StartLevel(const FLevelInfo& LevelInfo)
+{
+	BeatInterval = 60.0f / LevelInfo.BeatsPerMinute;
+	bIsEnabled = true;
+
+	// 1s for buffering
+	TimeToBeat += FMath::Min(BeatInterval, LevelInfo.BeatStartOffset + 1.0f);
+
+	if (MusicComponent) {
+		MusicComponent->FadeOut(TimeToBeat, 0.0f);
+		MusicComponent = nullptr;
+	}
+	if (LevelInfo.Music != nullptr) {
+		MusicComponent = UGameplayStatics::SpawnSound2D(this, LevelInfo.Music, 1.0f, 1.0f, TimeToBeat - LevelInfo.BeatStartOffset);
+	}
+}
+
+void ARythmController::QueueStartLevel(const struct FLevelInfo& LevelInfo)
+{
+	if (bIsEnabled) {
+		QueuedLevelToStart = &LevelInfo;
+	} else {
+		StartLevel(LevelInfo);
+	}
+}
+
+void ARythmController::StopLevel()
+{
+	bIsEnabled = false;
+	TimeToBeat = 0.0f;
+	if (MusicComponent) {
+		MusicComponent->FadeOut(BeatInterval, 0.0f);
+		MusicComponent = nullptr;
+	}
 }

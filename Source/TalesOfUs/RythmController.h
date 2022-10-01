@@ -7,6 +7,10 @@ USTRUCT()
 struct FLegState {
 	GENERATED_BODY()
 
+	bool bIsLifted = false;
+
+	FVector RaycastOffset;
+
 	FVector CurrentPosition;
 	FVector LastPosition;
 
@@ -50,14 +54,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USoundBase* IdleBeatSFX;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BeatsPerMinute = 60.0f;
-
 	UPROPERTY(EditAnywhere)
 	float OvershootTolerance = 0.25; // Percent of beat interval
 
 	UPROPERTY(EditAnywhere)
 	float UndershootTolerance = 0.25; // Percent of beat interval
+									  //
+	UPROPERTY(EditAnywhere)
+	float MinOvershootTolerance = 0.15; // Seconds
+
+	UPROPERTY(EditAnywhere)
+	float MinUndershootTolerance = 0.15; // Seconds
+										 //
+	UPROPERTY(EditAnywhere)
+	FVector LiftedOffset = {0.0f, 0.0f, 100.0f};
 
 	UPROPERTY(EditAnywhere)
 	float QuantizeTolerance = 0.2; // Seconds
@@ -65,6 +75,8 @@ public:
 private:
 	UPROPERTY()
 	TArray<FLegState> LegStates;
+
+	bool bIsEnabled = false;
 
 	float TimeToBeat = 0.0f;
 	float BeatInterval = 0.0f;
@@ -74,6 +86,11 @@ private:
 	int32 NextLegToLift = 0;
 	FVector CameraOffset;
 	FVector CameraTarget;
+
+	const struct FLevelInfo* QueuedLevelToStart = nullptr;
+
+	UPROPERTY()
+	class UAudioComponent* MusicComponent = nullptr;
 
 	UFUNCTION()
 	void HandleJump();
@@ -86,6 +103,10 @@ private:
 	void PerformIdleAction(float Duration);
 	void CancelAnimation(bool bComplete);
 	void ApplyLegAnimation(FLegState& LegState);
+
+	void QueueStartLevel(const struct FLevelInfo& LevelInfo);
+	void StartLevel(const struct FLevelInfo& LevelInfo);
+	void StopLevel();
 
 protected:
 	void Tick(float DeltaTime) override;
