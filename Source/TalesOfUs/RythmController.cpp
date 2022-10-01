@@ -80,12 +80,15 @@ void ARythmController::ApplyLegAnimation(FLegState& LegState)
 	TweenerSubsystem->StartTween(LegState.Tween);
 
 	FVector FirstLegPosition(INFINITY, 0.0f, 0.0f);
+	float AverageZ = 0.0f;
 	for (FLegState& ItLegState : LegStates) {
 		FVector LegPosition = ItLegState.CurrentPosition;
+		AverageZ += LegPosition.Z;
 		if (LegPosition.X < FirstLegPosition.X) {
 			FirstLegPosition = LegPosition;
 		}
 	}
+	FirstLegPosition.Z = AverageZ / LegStates.Num();
 
 	CameraTarget = FirstLegPosition + CameraOffset;
 }
