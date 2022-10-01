@@ -18,6 +18,12 @@ public:
     class UImage* RightOptionImage;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    class UTextBlock* LeftName;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    class UTextBlock* RightName;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UScrollBox* ScrollPanel;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -38,7 +44,7 @@ public:
 
 public:
     UFUNCTION()
-    void UpdateVisuals(const struct FSlateBrush& LeftBrush, const struct FSlateBrush& RightBrush);
+    void UpdateVisuals(const FDialogueCharacter& LeftCharacter, const FDialogueCharacter& RightCharacter);
     
     UFUNCTION()
     void AddDialogueLine(const FDialogueItem& DialogueItem);

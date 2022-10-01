@@ -30,6 +30,13 @@ FReply UEndLevel::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPo
     return FReply::Handled();
 }
 
+void UEndLevel::FinishEndPresentation()
+{
+    // TODO: Fade out animation
+    GameState->ShowOption();
+    SetVisibility(ESlateVisibility::Hidden);
+}
+
 void UEndLevel::Hide()
 {
     SetVisibility(ESlateVisibility::Hidden);

@@ -33,13 +33,17 @@ void ARythmGameState::AdvanceEndLevelDialogue()
 		// TODO: The OnHideEndLevel should trigger a fade out animation
 		// TODO: After that animation finishes it should call back into the GameState to update the options menu		
 		OnHideEndLevel.Broadcast();
-		OnOptionChange.Broadcast(SelectedLevel.Choice.FirstCharacter.CharacterImage, SelectedLevel.Choice.SecondCharacter.CharacterImage);
 		return;
 	}
 
 	OnAdvanceEndLevelDialogue.Broadcast(SelectedLevel.ResultMap[0.0f].TextLines[EndLevelDialogueIndex]);
 	EndLevelDialogueIndex++;
 	return;
+}
+
+void ARythmGameState::ShowOption()
+{
+	OnOptionChange.Broadcast(SelectedLevel.Choice.FirstCharacter, SelectedLevel.Choice.SecondCharacter);
 }
 
 void ARythmGameState::AdvanceOptionsDialogue()

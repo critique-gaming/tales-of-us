@@ -11,7 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FRythmSimpleDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceEndDialogueDelegate, FText, DialogueLine);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateEndVisuals, const struct FSlateBrush&, Brush);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceOptionDialogueDelegate, const struct FDialogueItem&, DialogueItem);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUpdateOptionVisuals, const struct FSlateBrush&, LeftBrush, const struct FSlateBrush&, RightBrush);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUpdateOptionVisuals, const struct FDialogueCharacter&, LeftCharacter, const struct FDialogueCharacter&, RightCharacter);
 
 UCLASS(Blueprintable, BlueprintType)
 class ARythmGameState : public AGameStateBase
@@ -60,6 +60,9 @@ public:
 
 	UFUNCTION()
 	void HandleEndOfLevel();
+
+	UFUNCTION()
+	void ShowOption();
 
 private:
 	UPROPERTY()

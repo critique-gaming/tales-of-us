@@ -14,6 +14,9 @@ public:
     class UCanvasPanel* MainCanvas;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    class UImage* Background;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UEndLevel* EndLevel;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

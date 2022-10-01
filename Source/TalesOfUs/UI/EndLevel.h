@@ -34,6 +34,9 @@ public:
     void UpdateVisuals(const struct FSlateBrush& Brush);
 
     UFUNCTION()
+    void FinishEndPresentation();
+
+    UFUNCTION()
     void Hide();
 
 private:   
