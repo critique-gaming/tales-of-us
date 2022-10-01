@@ -18,7 +18,7 @@ public:
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UVerticalBox* ContentBox;
-    
+
 public:
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<class UDialogueTextBlock> DialogueTextBlockClass;
@@ -30,8 +30,7 @@ public:
     UFUNCTION()
     void AddDialogueLine(FText Text);
 
-    UFUNCTION()
-    void UpdateVisuals(const struct FSlateBrush& Brush);
+	void UpdateVisuals(struct FLevelResult* LevelResult);
 
     UFUNCTION()
     void FinishEndPresentation();
@@ -39,6 +38,6 @@ public:
     UFUNCTION()
     void Hide();
 
-private:   
+private:
     FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 };

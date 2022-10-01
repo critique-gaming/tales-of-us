@@ -1,5 +1,6 @@
 #include "EndLevel.h"
 #include "TalesOfUs/RythmGameState.h"
+#include "TalesOfUs/LevelResult.h"
 #include "DialogueTextBlock.h"
 
 #include "Components/TextBlock.h"
@@ -16,10 +17,12 @@ void UEndLevel::AddDialogueLine(FText Text)
     ContentBox->AddChild(NewTextBlock);
 }
 
-void UEndLevel::UpdateVisuals(const FSlateBrush& Brush)
+void UEndLevel::UpdateVisuals(FLevelResult* LevelResult)
 {
     SetVisibility(ESlateVisibility::Visible);
-    ResultImage->SetBrush(Brush);
+	if (LevelResult != nullptr) {
+		ResultImage->SetBrush(LevelResult->CharacterBrush);
+	}
     // TODO: Appear animation
 }
 

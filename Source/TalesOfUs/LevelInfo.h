@@ -1,7 +1,6 @@
 #pragma once
 #include "TalesOfUs/TalesOfUs.h"
 #include "LevelResult.h"
-#include "Choice.h"
 
 #include "LevelInfo.generated.h"
 
@@ -14,7 +13,7 @@ struct FLevelInfo
     TMap<float, FLevelResult> ResultMap;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    FChoice Choice;
+	FName ChoiceId;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float BeatsPerMinute = 130.0f;
