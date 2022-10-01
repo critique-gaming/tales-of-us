@@ -15,6 +15,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceOptionDialogueDelegate, cons
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUpdateOptionVisuals, const struct FDialogueCharacter&, LeftCharacter, const struct FDialogueCharacter&, RightCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FUpdateOptionButtons, const FText&, LeftText, FName, LeftId, const FText&, RightText, FName, RightId);
 
+UENUM(BlueprintType)
+enum class ERythmGamePhase : uint8
+{
+	Idle,
+	Level,
+	Result,
+	Choice
+};
+
 UCLASS(Blueprintable, BlueprintType)
 class ARythmGameState : public AGameStateBase
 {
@@ -59,6 +68,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	FName StartingLevelId;
 
+	ERythmGamePhase Phase = ERythmGamePhase::Idle;
+
 	FChoice * CurrentChoice = nullptr;
 	FLevelInfo* SelectedLevel = nullptr;
 	FLevelResult* LevelResult = nullptr;
@@ -81,6 +92,8 @@ public:
 
 	UFUNCTION()
 	void ShowChoiceDialog(FName ChoiceId);
+
+	void Jump();
 
 private:
 	UPROPERTY()

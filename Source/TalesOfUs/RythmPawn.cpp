@@ -11,6 +11,6 @@ void ARythmPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void ARythmPawn::HandleJump()
 {
 	if (ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState())) {
-		GameState->OnJump.Broadcast();
+		GameState->Jump();
 	}
 }
