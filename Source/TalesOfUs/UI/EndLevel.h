@@ -27,6 +27,15 @@ public:
     class ARythmGameState* GameState;
 
 public:
-    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    UFUNCTION()
     void AddDialogueLine(FText Text);
+
+    UFUNCTION()
+    void UpdateVisuals(const struct FSlateBrush& Brush);
+
+    UFUNCTION()
+    void Hide();
+
+private:   
+    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 };

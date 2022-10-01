@@ -9,7 +9,7 @@ struct FLevelResult
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    class UTexture2D* CharacterImage;
+    struct FSlateBrush CharacterBrush;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<FText> TextLines;

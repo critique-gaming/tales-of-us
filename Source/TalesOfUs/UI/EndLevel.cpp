@@ -1,8 +1,11 @@
 #include "EndLevel.h"
+#include "TalesOfUs/RythmGameState.h"
 #include "DialogueTextBlock.h"
 
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Components/Image.h"
+#include "Styling/SlateBrush.h"
 
 void UEndLevel::AddDialogueLine(FText Text)
 {
@@ -13,9 +16,22 @@ void UEndLevel::AddDialogueLine(FText Text)
     ContentBox->AddChild(NewTextBlock);
 }
 
+void UEndLevel::UpdateVisuals(const FSlateBrush& Brush)
+{
+    SetVisibility(ESlateVisibility::Visible);
+    ResultImage->SetBrush(Brush);
+    // TODO: Appear animation
+}
+
 FReply UEndLevel::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     // TODO: Call back into the game state
+    GameState->AdvanceEndLevelDialogue();
     return FReply::Handled();
+}
+
+void UEndLevel::Hide()
+{
+    SetVisibility(ESlateVisibility::Hidden);
 }
 

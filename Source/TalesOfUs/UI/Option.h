@@ -1,6 +1,7 @@
 #pragma once
 #include "TalesOfUs/TalesOfUs.h"
 #include "Blueprint/UserWidget.h"
+#include "TalesOfUs/Choice.h"
 
 #include "Option.generated.h"
 
@@ -36,7 +37,14 @@ public:
     TSubclassOf<class UDialogueTextBlock> DialogueTextBlockClass;
 
 public:
-    void AddDialogueLine(FText Tex, int32 OwnerId);
+    UFUNCTION()
+    void UpdateVisuals(const struct FSlateBrush& LeftBrush, const struct FSlateBrush& RightBrush);
+    
+    UFUNCTION()
+    void AddDialogueLine(const FDialogueItem& DialogueItem);
+
+    UFUNCTION()
+    void Hide();
 
 protected:
     FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

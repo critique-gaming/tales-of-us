@@ -24,9 +24,9 @@ struct FDialogueCharacter
     FText Name;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    class UTexture2D* Image = nullptr;
+    struct FSlateBrush CharacterImage;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0, ClampMax = 1, Tooltip = "0 is for left character, 1 is for right character"))
     int32 Id = 0;
 };
 
