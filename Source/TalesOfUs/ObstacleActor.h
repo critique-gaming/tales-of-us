@@ -12,6 +12,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USoundBase* SquishSFX;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShouldSquish = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bWasSquished = false;
+
 	void BeginPlay() override;
 	void Squish();
 };

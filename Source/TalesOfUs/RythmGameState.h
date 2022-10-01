@@ -9,7 +9,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FRythmSimpleDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceEndDialogueDelegate, FText, DialogueLine);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateEndVisuals, const struct FSlateBrush&, Brush);
+DECLARE_MULTICAST_DELEGATE_OneParam(FUpdateEndVisuals, FLevelResult*);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceOptionDialogueDelegate, const struct FDialogueItem&, DialogueItem);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FUpdateOptionVisuals, const struct FDialogueCharacter&, LeftCharacter, const struct FDialogueCharacter&, RightCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FUpdateOptionButtons, const FText&, LeftText, FName, LeftId, const FText&, RightText, FName, RightId);
@@ -29,13 +29,12 @@ public:
 	UPROPERTY()
 	FRythmSimpleDelegate OnHideEndLevel;
 
-	UPROPERTY() 
+	UPROPERTY()
 	FAdvanceOptionDialogueDelegate OnAdvanceOptionDialogue;
 
 	UPROPERTY()
 	FAdvanceEndDialogueDelegate OnAdvanceEndLevelDialogue;
 
-	UPROPERTY()
 	FUpdateEndVisuals OnLevelEnd;
 
 	UPROPERTY()
@@ -50,20 +49,21 @@ public:
 	UPROPERTY(EditAnywhere)
 	TMap<FName, FLevelInfo> LevelInfoMap;
 
-	FLevelInfo SelectedLevel;
+	FLevelInfo* SelectedLevel = nullptr;
+	FLevelResult* LevelResult = nullptr;
 
 public:
 	UFUNCTION()
 	void AdvanceOptionsDialogue();
-	
+
 	UFUNCTION()
 	void AdvanceEndLevelDialogue();
 
 	UFUNCTION()
 	void AdvanceLevel(FName LevelId);
 
-	UFUNCTION()
-	void HandleEndOfLevel();
+	UFUNCTION(BlueprintCallable)
+	void EndLevel();
 
 	UFUNCTION()
 	void ShowOption();
@@ -74,13 +74,17 @@ private:
 
 	UPROPERTY()
 	int32 OptionDialogueIndex = 0;
-	
+
 	UPROPERTY()
 	int32 EndLevelDialogueIndex = 0;
-	
+
+public:
+	UPROPERTY()
+	TArray<class AObstacleActor*> Obstacles;
+
+	UPROPERTY(BlueprintReadWrite)
+	AActor* LevelEndActor;
+
 protected:
 	void BeginPlay() override;
-
-private:
-	void TestUI();
 };

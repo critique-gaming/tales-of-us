@@ -40,6 +40,9 @@ public:
 	AActor* Camera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USoundBase* TransitionMusic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USoundBase* LiftSFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -94,6 +97,11 @@ private:
 
 	UFUNCTION()
 	void HandleJump();
+
+	void HandleLevelEnd(struct FLevelResult* LevelResult);
+
+	UFUNCTION()
+	void HandleLevelChange();
 
 	void LiftUpLeg(int32 LegIndex, float Duration);
 	void DropLeg(int32 LegIndex, float Duration);

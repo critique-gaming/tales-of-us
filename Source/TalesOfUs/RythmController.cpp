@@ -27,6 +27,8 @@ void ARythmController::BeginPlay()
 
 	if (GameState != nullptr) {
 		GameState->OnJump.AddDynamic(this, &ARythmController::HandleJump);
+		GameState->OnLevelChange.AddDynamic(this, &ARythmController::HandleLevelChange);
+		GameState->OnLevelEnd.AddUObject(this, &ARythmController::HandleLevelEnd);
 	}
 
 	for (AActor* Actor : Legs) {
@@ -48,8 +50,8 @@ void ARythmController::BeginPlay()
 	CameraTarget = Camera->GetActorLocation();
 	CameraOffset = CameraTarget - LegStates[0].Actor->GetActorLocation();
 
-	if (GameState != nullptr) {
-		QueueStartLevel(GameState->LevelInfoMap.begin()->Value);
+	if (TransitionMusic != nullptr) {
+		MusicComponent = UGameplayStatics::SpawnSound2D(this, TransitionMusic);
 	}
 }
 
@@ -123,6 +125,18 @@ void ARythmController::DropLeg(int32 LegIndex, float Duration)
 	} else {
 		if (DropSFX != nullptr) {
 			UGameplayStatics::PlaySound2D(this, DropSFX);
+		}
+	}
+
+	if (ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState())) {
+		bool bHasFinished = true;
+		for (FLegState& ItLegState : LegStates) {
+			if (ItLegState.CurrentPosition.X < GameState->LevelEndActor->GetActorLocation().X) {
+				bHasFinished = false;
+			}
+		}
+		if (bHasFinished) {
+			GameState->EndLevel();
 		}
 	}
 }
@@ -262,6 +276,13 @@ void ARythmController::QueueStartLevel(const struct FLevelInfo& LevelInfo)
 	}
 }
 
+void ARythmController::HandleLevelChange()
+{
+	ARythmGameState* GameState = Cast<ARythmGameState>(GetWorld()->GetGameState());
+	check(GameState != nullptr);
+	QueueStartLevel(*GameState->SelectedLevel);
+}
+
 void ARythmController::StopLevel()
 {
 	bIsEnabled = false;
@@ -270,4 +291,13 @@ void ARythmController::StopLevel()
 		MusicComponent->FadeOut(BeatInterval, 0.0f);
 		MusicComponent = nullptr;
 	}
+
+	if (TransitionMusic != nullptr) {
+		MusicComponent = UGameplayStatics::SpawnSound2D(this, TransitionMusic);
+	}
+}
+
+void ARythmController::HandleLevelEnd(struct FLevelResult* LevelResult)
+{
+	StopLevel();
 }
