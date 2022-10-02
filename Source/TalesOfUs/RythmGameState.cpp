@@ -173,6 +173,8 @@ void ARythmGameState::AdvanceLevel(FName LevelId)
 		Obstacle->Reset();
 	}
 
+	Phase = ERythmGamePhase::Idle;
+
 	if (LoadedLevel != SelectedLevel->MapId) {
 		Obstacles.Empty();
 		LevelEndActor = nullptr;
