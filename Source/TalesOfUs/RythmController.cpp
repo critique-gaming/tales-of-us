@@ -296,8 +296,9 @@ void ARythmController::Tick(float DeltaTime)
 			}
 			if (!bPerformedActionThisBeat) {
 				PerformIdleAction(TimeToBeat);
+			} else {
+				bPerformedActionThisBeat = false;
 			}
-			bPerformedActionThisBeat = false;
 		}
 	}
 
