@@ -52,6 +52,8 @@ void UOption::UpdateVisuals(const FDialogueCharacter& LeftCharacter, const FDial
     RightName->SetText(RightCharacter.Name);
 	ShortLeftName = LeftCharacter.ShortName.IsEmpty() ? LeftCharacter.Name : LeftCharacter.ShortName;
 	ShortRightName = RightCharacter.ShortName.IsEmpty() ? RightCharacter.Name : RightCharacter.ShortName;
+	LeftOptionButton->SetVisibility(ESlateVisibility::Hidden);
+	RightOptionButton->SetVisibility(ESlateVisibility::Hidden);
 
 	ContentBox->ClearChildren();
 	PlayAnimation(InAnimation);

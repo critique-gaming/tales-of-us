@@ -35,7 +35,7 @@ void ARythmGameState::EndLevel()
 			CorrectAnswers += 1;
 		}
 	}
-	float Score = (float)CorrectAnswers / Obstacles.Num();
+	float Score = Obstacles.IsEmpty() ? 1.0f : ((float)CorrectAnswers / Obstacles.Num());
 
 	TArray<float> Tresholds;
 	SelectedLevel->ResultMap.GenerateKeyArray(Tresholds);
@@ -67,7 +67,7 @@ void ARythmGameState::EndGame()
 	if (bHasFinished) return;
 	bHasFinished = true;
 
-	float Score = (float)GlobalCorrectAnswers / GlobalObstacleCount;
+	float Score = GlobalObstacleCount == 0 ? 1.0f : ((float)GlobalCorrectAnswers / GlobalObstacleCount);
 
 	TArray<float> Tresholds;
 	GlobalResultMap.GenerateKeyArray(Tresholds);
@@ -94,6 +94,7 @@ void ARythmGameState::EndGame()
 void ARythmGameState::AdvanceEndLevelDialogue()
 {
 	if (Phase != ERythmGamePhase::Result && Phase != ERythmGamePhase::Intro) return;
+	if (LevelResult == nullptr) return;
 	if (EndLevelDialogueIndex == -1) return;
 
 	if (EndLevelDialogueIndex >= LevelResult->TextLines.Num()) {
@@ -148,7 +149,7 @@ void ARythmGameState::AdvanceOptionsDialogue()
 		const FText& LeftText = CurrentChoice->FirstChoiceText;
 		FName LeftId = CurrentChoice->FirstChoiceLevel;
 		const FText& RightText = CurrentChoice->SecondChoiceText;
-		FName RightId = CurrentChoice->FirstChoiceLevel;
+		FName RightId = CurrentChoice->SecondChoiceLevel;
 
 		OnButtonUpdate.Broadcast(LeftText, LeftId, RightText, RightId);
 		OptionDialogueIndex++;
