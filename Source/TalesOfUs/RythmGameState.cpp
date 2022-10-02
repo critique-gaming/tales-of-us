@@ -209,6 +209,7 @@ void ARythmGameState::FinishAdvanceLevel()
 
 void ARythmGameState::Jump()
 {
+	return;
 	switch (Phase) {
 		case ERythmGamePhase::Result:
 			AdvanceEndLevelDialogue();
