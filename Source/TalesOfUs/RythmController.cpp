@@ -28,7 +28,7 @@ void ARythmController::BeginPlay()
 
 	if (GameState != nullptr) {
 		GameState->OnJump.AddDynamic(this, &ARythmController::HandleJump);
-		GameState->OnLevelChange.AddDynamic(this, &ARythmController::HandleLevelChange);
+		GameState->OnLevelBegin.AddDynamic(this, &ARythmController::HandleLevelChange);
 		GameState->OnLevelEnd.AddUObject(this, &ARythmController::HandleLevelEnd);
 	}
 
@@ -296,8 +296,9 @@ void ARythmController::Tick(float DeltaTime)
 			}
 			if (!bPerformedActionThisBeat) {
 				PerformIdleAction(TimeToBeat);
+			} else {
+				bPerformedActionThisBeat = false;
 			}
-			bPerformedActionThisBeat = false;
 		}
 	}
 

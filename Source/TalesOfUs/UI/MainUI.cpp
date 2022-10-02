@@ -20,6 +20,7 @@ void UMainUI::NativeOnInitialized()
     Option->GameState = GameState;
 
     GameState->OnLevelEnd.AddUObject(EndLevel, &UEndLevel::UpdateVisuals);
+    GameState->OnLevelIntro.AddUObject(EndLevel, &UEndLevel::UpdateVisuals);
     GameState->OnLevelChange.AddDynamic(EndLevel, &UEndLevel::Hide);
     GameState->OnHideEndLevel.AddDynamic(EndLevel, &UEndLevel::FinishEndPresentation); // TODO: Change function to call back into gamestate to reveal options
     GameState->OnAdvanceEndLevelDialogue.AddDynamic(EndLevel, &UEndLevel::AddDialogueLine);
