@@ -177,13 +177,14 @@ void ARythmGameState::AdvanceLevel(FName LevelId)
 		Obstacles.Empty();
 		LevelEndActor = nullptr;
 
-		if (!LoadedLevel.IsNone()) {
-			FLatentActionInfo LatentInfo;
-			UGameplayStatics::UnloadStreamLevel(this, SelectedLevel->MapId, LatentInfo, true);
-		}
 		if (!SelectedLevel->MapId.IsNone()) {
 			FLatentActionInfo LatentInfo;
 			UGameplayStatics::LoadStreamLevel(this, SelectedLevel->MapId, true, true, LatentInfo);
+		}
+
+		if (!LoadedLevel.IsNone()) {
+			FLatentActionInfo LatentInfo;
+			UGameplayStatics::UnloadStreamLevel(this, LoadedLevel, LatentInfo, true);
 		}
 	}
 
