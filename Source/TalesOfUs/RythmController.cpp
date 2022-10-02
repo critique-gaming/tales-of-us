@@ -322,6 +322,7 @@ void ARythmController::StartLevel(const FLevelInfo& LevelInfo)
 	}
 	if (LevelInfo.Music != nullptr) {
 		MusicComponent = UGameplayStatics::SpawnSound2D(this, LevelInfo.Music, 1.0f, 1.0f, TimeToBeat - LevelInfo.BeatStartOffset);
+		MusicComponent->Loops
 	}
 }
 
