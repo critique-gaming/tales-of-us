@@ -28,7 +28,7 @@ void ARythmController::BeginPlay()
 
 	if (GameState != nullptr) {
 		GameState->OnJump.AddDynamic(this, &ARythmController::HandleJump);
-		GameState->OnLevelChange.AddDynamic(this, &ARythmController::HandleLevelChange);
+		GameState->OnLevelBegin.AddDynamic(this, &ARythmController::HandleLevelChange);
 		GameState->OnLevelEnd.AddUObject(this, &ARythmController::HandleLevelEnd);
 	}
 

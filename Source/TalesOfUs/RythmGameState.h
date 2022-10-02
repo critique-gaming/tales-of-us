@@ -19,9 +19,11 @@ UENUM(BlueprintType)
 enum class ERythmGamePhase : uint8
 {
 	Idle,
+	Intro,
 	Level,
 	Result,
-	Choice
+	Choice,
+	Outro
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -37,6 +39,9 @@ public:
 	FRythmSimpleDelegate OnLevelChange;
 
 	UPROPERTY()
+	FRythmSimpleDelegate OnLevelBegin;
+
+	UPROPERTY()
 	FRythmSimpleDelegate OnHideEndLevel;
 
 	UPROPERTY()
@@ -49,6 +54,8 @@ public:
 	FAdvanceEndDialogueDelegate OnAdvanceEndLevelDialogue;
 
 	FUpdateEndVisuals OnLevelEnd;
+
+	FUpdateEndVisuals OnLevelIntro;
 
 	UPROPERTY()
 	FUpdateOptionVisuals OnOptionChange;
@@ -64,6 +71,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TMap<FName, FChoice> Choices;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TMap<float, FLevelResult> GlobalResultMap;
 
 	UPROPERTY(EditAnywhere)
 	FName StartingChoiceId;
@@ -98,6 +108,13 @@ public:
 
 	void Jump();
 
+public:
+    UPROPERTY(BlueprintReadOnly)
+	int32 GlobalCorrectAnswers = 0;
+
+    UPROPERTY(BlueprintReadOnly)
+	int32 GlobalObstacleCount = 0;
+
 private:
 	UPROPERTY()
 	UMainUI* MainUI;
@@ -107,6 +124,11 @@ private:
 
 	UPROPERTY()
 	int32 EndLevelDialogueIndex = 0;
+
+	UPROPERTY()
+	bool bHasFinished = false;
+
+	void EndGame();
 
 public:
 	UPROPERTY()

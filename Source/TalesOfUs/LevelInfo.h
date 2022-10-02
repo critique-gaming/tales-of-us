@@ -10,6 +10,9 @@ struct FLevelInfo
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FLevelResult Intro;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TMap<float, FLevelResult> ResultMap;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -26,4 +29,8 @@ struct FLevelInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class USoundBase* Music;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bMusicOverTransition = false;
+
 };

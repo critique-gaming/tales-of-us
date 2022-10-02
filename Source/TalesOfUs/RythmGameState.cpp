@@ -52,6 +52,38 @@ void ARythmGameState::EndLevel()
 		}
 	}
 
+	GlobalCorrectAnswers += CorrectAnswers;
+	GlobalObstacleCount += Obstacles.Num();
+
+	Phase = ERythmGamePhase::Result;
+	EndLevelDialogueIndex = 0;
+	OnLevelEnd.Broadcast(LevelResult);
+
+	AdvanceEndLevelDialogue();
+}
+
+void ARythmGameState::EndGame()
+{
+	if (bHasFinished) return;
+	bHasFinished = true;
+
+	float Score = (float)GlobalCorrectAnswers / GlobalObstacleCount;
+
+	TArray<float> Tresholds;
+	GlobalResultMap.GenerateKeyArray(Tresholds);
+	Tresholds.Sort();
+
+	UE_LOG(LogTemp, Display, TEXT("Score %f"), Score);
+
+	LevelResult = nullptr;
+	for (int32 Index = Tresholds.Num() - 1; Index >= 0; Index -= 1) {
+		float Treshold = Tresholds[Index];
+		if (Score <= Treshold) {
+			LevelResult = &GlobalResultMap[Treshold];
+			UE_LOG(LogTemp, Display, TEXT("Met threshold %f"), Treshold);
+		}
+	}
+
 	Phase = ERythmGamePhase::Result;
 	EndLevelDialogueIndex = 0;
 	OnLevelEnd.Broadcast(LevelResult);
@@ -61,11 +93,14 @@ void ARythmGameState::EndLevel()
 
 void ARythmGameState::AdvanceEndLevelDialogue()
 {
-	if (Phase != ERythmGamePhase::Result) return;
+	if (Phase != ERythmGamePhase::Result && Phase != ERythmGamePhase::Intro) return;
+	if (EndLevelDialogueIndex == -1) return;
+
 	if (EndLevelDialogueIndex >= LevelResult->TextLines.Num()) {
+		EndLevelDialogueIndex = -1;
+
 		// TODO: The OnHideEndLevel should trigger a fade out animation
 		// TODO: After that animation finishes it should call back into the GameState to update the options menu
-		Phase = ERythmGamePhase::Idle;
 		OnHideEndLevel.Broadcast();
 		return;
 	}
@@ -78,8 +113,16 @@ void ARythmGameState::AdvanceEndLevelDialogue()
 
 void ARythmGameState::ShowOption()
 {
+	if (Phase == ERythmGamePhase::Intro) {
+		Phase = ERythmGamePhase::Level;
+		OnLevelBegin.Broadcast();
+		return;
+	}
+
 	if (!SelectedLevel->ChoiceId.IsNone()) {
 		ShowChoiceDialog(SelectedLevel->ChoiceId);
+	} else {
+		EndGame();
 	}
 }
 
@@ -120,8 +163,6 @@ void ARythmGameState::AdvanceOptionsDialogue()
 
 void ARythmGameState::AdvanceLevel(FName LevelId)
 {
-	Phase = ERythmGamePhase::Level;
-
 	FName LoadedLevel;
 	if (SelectedLevel != nullptr) LoadedLevel = SelectedLevel->MapId;
 
@@ -145,10 +186,21 @@ void ARythmGameState::AdvanceLevel(FName LevelId)
 		}
 	}
 
+	Phase = ERythmGamePhase::Intro;
+
 	OnLevelChange.Broadcast();
 
-	// TODO: Delete
-	// EndLevel();
+	if (SelectedLevel->Intro.TextLines.IsEmpty()) {
+		Phase = ERythmGamePhase::Level;
+		OnLevelBegin.Broadcast();
+		return;
+	}
+
+	LevelResult = &SelectedLevel->Intro;
+	EndLevelDialogueIndex = 0;
+	OnLevelIntro.Broadcast(LevelResult);
+
+	AdvanceEndLevelDialogue();
 }
 
 void ARythmGameState::Jump()
