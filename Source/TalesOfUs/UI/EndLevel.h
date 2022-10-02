@@ -24,10 +24,10 @@ public:
     class ARythmGameState* GameState;
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
-	class UWidgetAnimation* InAnimation;
+	class UWidgetAnimation* InAnimation = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
-	class UWidgetAnimation* OutAnimation;
+	class UWidgetAnimation* OutAnimation = nullptr;
 
 public:
     UFUNCTION()

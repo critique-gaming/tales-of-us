@@ -8,6 +8,7 @@
 #include "Components/Image.h"
 #include "Components/Button.h"
 #include "Styling/SlateBrush.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "Option"
 
@@ -22,7 +23,6 @@ void UOption::NativeOnInitialized()
 
 FReply UOption::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-    // TODO: Call something in the game state
     GameState->AdvanceOptionsDialogue();
     return FReply::Handled();
 }
@@ -32,17 +32,13 @@ void UOption::AddDialogueLine(const FDialogueItem& DialogueItem)
     UDialogueTextBlock* NewTextBlock = CreateWidget<UDialogueTextBlock>(GetWorld(), DialogueTextBlockClass);
     check(NewTextBlock != nullptr);
 
-    UTextBlock* CharacterName = DialogueItem.OwnerId == 0 ? LeftName : RightName;
-    FText Result = FText::Format(
-        LOCTEXT("DialogueText", "{Name}: {TextLine}"),
-        {
-            {TEXT("Name"), CharacterName->GetText()},
-            {TEXT("TextLine"), DialogueItem.LineText}
-        }
-    );
-
-    NewTextBlock->TextBlock->SetText(Result);
+	FText CharacterName = DialogueItem.OwnerId == 0 ? ShortLeftName : ShortRightName;
+    NewTextBlock->TextBlock->SetText(DialogueItem.LineText);
+    NewTextBlock->NameTextBlock->SetText(CharacterName);
+	NewTextBlock->NameTextBlock->SetVisibility(ESlateVisibility::Visible);
     NewTextBlock->TextBlock->SetJustification(DialogueItem.OwnerId == 0 ? ETextJustify::Left : ETextJustify::Right);
+    NewTextBlock->NameTextBlock->SetJustification(DialogueItem.OwnerId == 0 ? ETextJustify::Left : ETextJustify::Right);
+	NewTextBlock->FadeIn();
     ContentBox->AddChild(NewTextBlock);
 
     // TODO: Animations for images and textblocks
@@ -55,8 +51,11 @@ void UOption::UpdateVisuals(const FDialogueCharacter& LeftCharacter, const FDial
     RightOptionImage->SetBrush(RightCharacter.CharacterImage);
     LeftName->SetText(LeftCharacter.Name);
     RightName->SetText(RightCharacter.Name);
+	ShortLeftName = LeftCharacter.ShortName.IsEmpty() ? LeftCharacter.Name : LeftCharacter.ShortName;
+	ShortRightName = RightCharacter.ShortName.IsEmpty() ? RightCharacter.Name : RightCharacter.ShortName;
 
-    // TODO: Popin animations
+	ContentBox->ClearChildren();
+	PlayAnimation(InAnimation);
 }
 
 void UOption::UpdateButtons(const FText& LeftChoiceText, FName _LeftLevelId, const FText& RightChoiceText, FName _RightLevelId)
@@ -72,9 +71,12 @@ void UOption::UpdateButtons(const FText& LeftChoiceText, FName _LeftLevelId, con
 
 void UOption::Hide()
 {
-    SetVisibility(ESlateVisibility::Hidden);
-    LeftOptionButton->SetVisibility(ESlateVisibility::Hidden);
-    LeftOptionButton->SetVisibility(ESlateVisibility::Hidden);
+	PlayAnimation(OutAnimation);
+
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
+		SetVisibility(ESlateVisibility::Hidden);
+	}), OutAnimation->GetEndTime(), false);
 }
 
 void UOption::MakeLeftChoice()

@@ -13,6 +13,9 @@ public:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UTextBlock* TextBlock;
 
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+    class UTextBlock* NameTextBlock;
+
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
 	class UWidgetAnimation* InAnimation = nullptr;
 

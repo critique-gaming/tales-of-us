@@ -24,9 +24,6 @@ public:
     class UTextBlock* RightName;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-    class UScrollBox* ScrollPanel;
-
-    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UVerticalBox* ContentBox;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -44,6 +41,12 @@ public:
     UPROPERTY(BlueprintReadOnly)
     class ARythmGameState* GameState;
 
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* InAnimation = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* OutAnimation = nullptr;
+
 public:
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<class UDialogueTextBlock> DialogueTextBlockClass;
@@ -54,7 +57,7 @@ public:
 
     UFUNCTION()
     void UpdateButtons(const FText& LeftChoiceText, FName _LeftLevelId, const FText& RightChoiceText, FName _RightLevelId);
-    
+
     UFUNCTION()
     void AddDialogueLine(const FDialogueItem& DialogueItem);
 
@@ -66,6 +69,11 @@ protected:
     FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 private:
+	UPROPERTY()
+	FText ShortLeftName;
+
+	UPROPERTY()
+	FText ShortRightName;
 
     // TODO: These should be kept on a button class but i'm too lazy to do that now
     UPROPERTY()

@@ -24,6 +24,9 @@ struct FDialogueCharacter
     FText Name;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FText ShortName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     struct FSlateBrush CharacterImage;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0, ClampMax = 1, Tooltip = "0 is for left character, 1 is for right character"))
@@ -34,7 +37,7 @@ USTRUCT(BlueprintType)
 struct FChoice
 {
     GENERATED_BODY()
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FDialogueCharacter FirstCharacter;
 
