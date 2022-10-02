@@ -177,16 +177,16 @@ void ARythmGameState::AdvanceLevel(FName LevelId)
 		Obstacles.Empty();
 		LevelEndActor = nullptr;
 
-		if (!SelectedLevel->MapId.IsNone()) {
-			FLatentActionInfo LatentInfo;
-			UGameplayStatics::LoadStreamLevel(this, SelectedLevel->MapId, true, true, LatentInfo);
-		}
-
-		if (!LoadedLevel.IsNone()) {
-			FLatentActionInfo LatentInfo;
-			UGameplayStatics::UnloadStreamLevel(this, LoadedLevel, LatentInfo, true);
-		}
+		OnLoadingLevelChange.Broadcast(true);
+		SwapSublevels(LoadedLevel, SelectedLevel->MapId);
+	} else {
+		FinishAdvanceLevel();
 	}
+}
+
+void ARythmGameState::FinishAdvanceLevel()
+{
+	OnLoadingLevelChange.Broadcast(false);
 
 	Phase = ERythmGamePhase::Intro;
 

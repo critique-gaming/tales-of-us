@@ -9,6 +9,7 @@
 #include "RythmGameState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FRythmSimpleDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRythmOnLoadingLevelChangeDelegate, bool, bIsLoadingLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceEndDialogueDelegate, FText, DialogueLine);
 DECLARE_MULTICAST_DELEGATE_OneParam(FUpdateEndVisuals, FLevelResult*);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAdvanceOptionDialogueDelegate, const struct FDialogueItem&, DialogueItem);
@@ -34,6 +35,9 @@ class ARythmGameState : public AGameStateBase
 public:
 	UPROPERTY(BlueprintAssignable)
 	FRythmSimpleDelegate OnJump;
+
+	UPROPERTY(BlueprintAssignable)
+	FRythmOnLoadingLevelChangeDelegate OnLoadingLevelChange;
 
 	UPROPERTY()
 	FRythmSimpleDelegate OnLevelChange;
@@ -142,4 +146,10 @@ public:
 
 protected:
 	void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void FinishAdvanceLevel();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SwapSublevels(FName OldLevel, FName NewLevel);
 };
