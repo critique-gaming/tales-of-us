@@ -241,6 +241,8 @@ void ARythmController::Stumble()
 	if (LiftedLegIndex >= 0) {
 		FLegState& LegState = LegStates[LiftedLegIndex];
 		LegState.CurrentPosition = LegState.LastPosition = LegState.LiftPosition;
+		LegState.bIsLifted = false;
+		LiftedLegIndex = -1;
 		ApplyLegAnimation(LegState);
 	}
 }
