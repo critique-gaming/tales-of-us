@@ -13,6 +13,15 @@ public:
 	class USoundBase* SquishSFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UNiagaraSystem* SquishVFX;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraComponent* VFXComponent;
+
+	UPROPERTY(EditAnywhere)
+	class USceneComponent* DummyRoot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bShouldSquish = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -22,4 +31,7 @@ public:
 	void Squish();
 
 	void Reset() override;
+
+private:
+	AObstacleActor();
 };
