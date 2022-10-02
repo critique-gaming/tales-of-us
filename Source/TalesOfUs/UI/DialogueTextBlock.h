@@ -12,4 +12,15 @@ class UDialogueTextBlock : public UUserWidget
 public:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UTextBlock* TextBlock;
+
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* InAnimation = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	inline void FadeIn()
+	{
+		if (InAnimation != nullptr) {
+			PlayAnimation(InAnimation);
+		}
+	}
 };

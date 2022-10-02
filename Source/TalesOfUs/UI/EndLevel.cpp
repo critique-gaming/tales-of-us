@@ -7,6 +7,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/Image.h"
 #include "Styling/SlateBrush.h"
+#include "TimerManager.h"
 
 void UEndLevel::AddDialogueLine(FText Text)
 {
@@ -14,6 +15,7 @@ void UEndLevel::AddDialogueLine(FText Text)
     check(NewTextBlock != nullptr);
 
     NewTextBlock->TextBlock->SetText(Text);
+	NewTextBlock->FadeIn();
     ContentBox->AddChild(NewTextBlock);
 }
 
@@ -23,21 +25,26 @@ void UEndLevel::UpdateVisuals(FLevelResult* LevelResult)
 	if (LevelResult != nullptr) {
 		ResultImage->SetBrush(LevelResult->CharacterBrush);
 	}
-    // TODO: Appear animation
+
+	ContentBox->ClearChildren();
+	PlayAnimation(InAnimation);
 }
 
 FReply UEndLevel::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-    // TODO: Call back into the game state
     GameState->AdvanceEndLevelDialogue();
     return FReply::Handled();
 }
 
 void UEndLevel::FinishEndPresentation()
 {
-    // TODO: Fade out animation
-    GameState->ShowOption();
-    SetVisibility(ESlateVisibility::Hidden);
+	PlayAnimation(OutAnimation);
+
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
+		SetVisibility(ESlateVisibility::Hidden);
+		GameState->ShowOption();
+	}), OutAnimation->GetEndTime(), false);
 }
 
 void UEndLevel::Hide()

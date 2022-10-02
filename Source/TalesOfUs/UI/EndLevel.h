@@ -14,9 +14,6 @@ public:
     class UImage* ResultImage;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-    class UScrollBox* ScrollPanel;
-
-    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
     class UVerticalBox* ContentBox;
 
 public:
@@ -25,6 +22,12 @@ public:
 
     UPROPERTY(BlueprintReadOnly)
     class ARythmGameState* GameState;
+
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* InAnimation;
+
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* OutAnimation;
 
 public:
     UFUNCTION()
