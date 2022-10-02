@@ -46,7 +46,6 @@ void UOption::AddDialogueLine(const FDialogueItem& DialogueItem)
 
 void UOption::UpdateVisuals(const FDialogueCharacter& LeftCharacter, const FDialogueCharacter& RightCharacter)
 {
-    SetVisibility(ESlateVisibility::Visible);
     LeftOptionImage->SetBrush(LeftCharacter.CharacterImage);
     RightOptionImage->SetBrush(RightCharacter.CharacterImage);
     LeftName->SetText(LeftCharacter.Name);
@@ -62,21 +61,16 @@ void UOption::UpdateButtons(const FText& LeftChoiceText, FName _LeftLevelId, con
 {
     LeftOptionText->SetText(LeftChoiceText);
     RightOptionText->SetText(RightChoiceText);
-    LeftOptionButton->SetVisibility(ESlateVisibility::Visible);
-    RightOptionButton->SetVisibility(ESlateVisibility::Visible);
 
     LeftLevelId = _LeftLevelId;
     RightLevelId = _RightLevelId;
+
+	PlayAnimation(ButtonShow);
 }
 
 void UOption::Hide()
 {
 	PlayAnimation(OutAnimation);
-
-	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
-		SetVisibility(ESlateVisibility::Hidden);
-	}), OutAnimation->GetEndTime(), false);
 }
 
 void UOption::MakeLeftChoice()

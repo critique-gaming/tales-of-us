@@ -47,6 +47,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
 	class UWidgetAnimation* OutAnimation = nullptr;
 
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* ButtonShow = nullptr;
+
 public:
     UPROPERTY(EditDefaultsOnly)
     TSubclassOf<class UDialogueTextBlock> DialogueTextBlockClass;

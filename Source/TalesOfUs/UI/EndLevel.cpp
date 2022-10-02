@@ -21,7 +21,6 @@ void UEndLevel::AddDialogueLine(FText Text)
 
 void UEndLevel::UpdateVisuals(FLevelResult* LevelResult)
 {
-    SetVisibility(ESlateVisibility::Visible);
 	if (LevelResult != nullptr) {
 		ResultImage->SetBrush(LevelResult->CharacterBrush);
 	}
@@ -42,7 +41,6 @@ void UEndLevel::FinishEndPresentation()
 
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
-		SetVisibility(ESlateVisibility::Hidden);
 		GameState->ShowOption();
 	}), OutAnimation->GetEndTime(), false);
 }
