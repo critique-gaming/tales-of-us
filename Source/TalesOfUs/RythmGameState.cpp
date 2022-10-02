@@ -209,14 +209,13 @@ void ARythmGameState::FinishAdvanceLevel()
 
 void ARythmGameState::Jump()
 {
-	return;
-	switch (Phase) {
-		case ERythmGamePhase::Result:
-			AdvanceEndLevelDialogue();
-			break;
-		case ERythmGamePhase::Choice:
-			AdvanceOptionsDialogue();
-			break;
-	}
+	/* switch (Phase) { */
+	/* 	case ERythmGamePhase::Result: */
+	/* 		AdvanceEndLevelDialogue(); */
+	/* 		break; */
+	/* 	case ERythmGamePhase::Choice: */
+	/* 		AdvanceOptionsDialogue(); */
+	/* 		break; */
+	/* } */
 	OnJump.Broadcast();
 }
